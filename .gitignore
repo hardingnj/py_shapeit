@@ -49,4 +49,4 @@ crashlytics-build.properties
 
 
 build/
-
+.ipynb_checkpoints/
