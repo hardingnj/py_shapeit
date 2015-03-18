@@ -16,6 +16,16 @@ dependencies are encoded with the hold_jid argument to qsub. In future I hope
 
 [Example code]("coming soon")
 
-I use the (anhima)[https://github.com/alimanfoo/anhima] package for working with genetic variation data, also
-included is a script that converts SHAPEIT output to an hdf5 file, which is a
- convenient way of handling large scale genetic data.
+I use the [anhima](https://github.com/alimanfoo/anhima) package for working
+with genetic variation data, also included is a script that converts SHAPEIT
+output to an hdf5 file, which is a convenient way of handling large scale
+genetic data.
+
+## Installation
+(After installing dependencies, tables, pyyaml)
+
+```
+git clone https://github.com/hardingnj/py_shapeit.git
+cd py_shapeit
+python setup.py install
+```
