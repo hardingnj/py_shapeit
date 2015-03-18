@@ -14,7 +14,7 @@ dependencies are encoded with the hold_jid argument to qsub. In future I hope
 
 [SHAPEIT documentation](https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.html)
 
-[Example code]("coming soon")
+[Example code](http://nbviewer.ipython.org/github/hardingnj/py_shapeit/blob/master/examples/py_shapeit_example.ipynb)
 
 I use the [anhima](https://github.com/alimanfoo/anhima) package for working
 with genetic variation data, also included is a script that converts SHAPEIT
