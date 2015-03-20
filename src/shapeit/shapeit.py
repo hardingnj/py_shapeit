@@ -159,6 +159,8 @@ class ShapeIt():
         qsub_parameters = ['-S', '/bin/bash',
                            '-j', 'y',
                            '-o', self.dirs['log']]
+        hold_list = [self.run_id]
+
         # get checksum
         self.settings['checksum'] = md5_for_file(self.checksum_file)
         yaml.dump(self.settings,
@@ -169,18 +171,17 @@ class ShapeIt():
 
         print sh.qsub('-hold_jid', self.run_id, '-N', 'ligate' + self.run_id,
                       qsub_parameters + li_args, self.ligate_script)
+        hold_list.append('ligate' + self.run_id)
 
         if self.duohmm_script is not None:
-            print sh.qsub('-hold_jid', 'ligate' + self.run_id,
+            print sh.qsub('-hold_jid', ",".join(hold_list),
                           '-N', 'duohmm' + self.run_id,
                           qsub_parameters + dm_args, self.duohmm_script)
-            print sh.qsub('-hold_jid', 'duohmm' + self.run_id,
-                          '-N', 'si2hdf5' + self.run_id, '-l', 'h_vmem=4G',
-                          qsub_parameters, self.h5_script)
-        else:
-            print sh.qsub('-hold_jid', 'ligate' + self.run_id,
-                          '-N', 'si2hdf5' + self.run_id, '-l', 'h_vmem=4G',
-                          qsub_parameters, self.h5_script)
+            hold_list.append('duohmm' + self.run_id)
+
+        print sh.qsub('-hold_jid', ",".join(hold_list),
+                      '-N', 'si2hdf5' + self.run_id, '-l', 'h_vmem=4G',
+                      qsub_parameters, self.h5_script)
 
     def setup_single_job(self, parameters, contig, vcf_file,
                          start=None, stop=None, pirs=None,
@@ -203,10 +204,13 @@ class ShapeIt():
         if duohmm:
             self._setup_duohmm()
 
+        self._setup_h5_conversion()
+
         self.settings['params'] = parse_command(parameters)
 
-    def run_single(self, si_args, dm_args=None):
+    def run_single_qsub(self, si_args, dm_args=None):
 
+        hold_list = list()
         qsub_parameters = ['-S', '/bin/bash',
                            '-j', 'y',
                            '-o', self.dirs['log']]
@@ -217,10 +221,17 @@ class ShapeIt():
 
         print sh.qsub('-N', self.run_id, qsub_parameters,
                       si_args, self.si_script)
+        hold_list.append(self.run_id)
+
         if self.duohmm_script is not None:
             print sh.qsub('-hold_jid', self.run_id,
                           '-N', 'duohmm' + self.run_id,
                           qsub_parameters + dm_args, self.duohmm_script)
+            hold_list.append('duohmm'+self.run_id)
+
+        print sh.qsub('-hold_jid', ",".join(hold_list),
+                      '-N', 'si2hdf5' + self.run_id, '-l', 'h_vmem=4G',
+                      qsub_parameters, self.h5_script)
 
     # INTERNAL FUNCTIONS
     def _setup_duohmm(self):
