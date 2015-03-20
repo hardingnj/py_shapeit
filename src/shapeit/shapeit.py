@@ -118,21 +118,20 @@ class ShapeIt():
         for i, region in enumerate(regions):
             start, stop = [str(x) for x in region]
             region_stem = str(i) + '_' + self.run_id
-            haps = join(region_dir, region_stem + '.haps.gz')
-            hap_files.append(haps)
 
             pir_region = None
             if pirs is not None:
                 pir_region = pirs.format(start, stop)
 
-            script_name = self._setup_shapeit(outdir=region_dir,
-                                              outstem=region_stem,
-                                              si_parameters=parameters,
-                                              start=start, stop=stop,
-                                              pirfile=pir_region,
-                                              graphs=graphs)
+            script_name, haps, _ = self._setup_shapeit(outdir=region_dir,
+                                                       outstem=region_stem,
+                                                       si_parameters=parameters,
+                                                       start=start, stop=stop,
+                                                       pirfile=pir_region,
+                                                       graphs=graphs)
 
             # name, script, mem, dependency
+            hap_files.append(haps)
             self.si_job_list.append(script_name)
 
         # set up ligateHaplotypes
@@ -193,15 +192,20 @@ class ShapeIt():
         self.provided_sample_file = sample_file
         self.contig = contig
 
-        self._setup_shapeit(self.outdir, self.run_id, parameters,
-                            start=start, stop=stop, pirfile=pirs,
-                            graphs=graphs)
+        script, haps, sample = self._setup_shapeit(self.outdir, self.run_id,
+                                                   parameters, start=start,
+                                                   stop=stop, pirfile=pirs,
+                                                   graphs=graphs)
+        self.si_script = script
+        assert haps == self.haplotypes_f
+        assert sample == self.phased_f
+
         if duohmm:
             self._setup_duohmm()
 
         self.settings['params'] = parse_command(parameters)
 
-    def run_single(self, si_args, dm_args):
+    def run_single(self, si_args, dm_args=None):
 
         qsub_parameters = ['-S', '/bin/bash',
                            '-j', 'y',
@@ -335,4 +339,4 @@ class ShapeIt():
                       " ".join(cmd_shape_it), convert_cmd],
             outfile=haps)
 
-        return script_name
+        return script_name, haps, samples
