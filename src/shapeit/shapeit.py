@@ -291,7 +291,7 @@ class ShapeIt():
 
         # this is pretty much the core function
         haps = join(outdir, outstem + '.haps.gz')
-        samples = join(outdir, outstem + '.sample.gz')
+        samples = join(outdir, outstem + '.samples.gz')
 
         cmd_shape_it = [self.executable]
 
