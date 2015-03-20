@@ -31,9 +31,6 @@ parser.add_argument('-o', '--out', dest='outfile', action='store',
 
 args = parser.parse_args()
 
-if os.path.isfile(args.outfile):
-    raise IOError(args.outfile + ' already exists. Exiting...')
-
 h5file = openFile(args.outfile, mode="w")
 root = h5file.root
 
