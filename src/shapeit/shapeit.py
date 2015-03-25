@@ -236,7 +236,7 @@ class ShapeIt():
     # INTERNAL FUNCTIONS
     def _setup_duohmm(self):
 
-        gunzip = "gunzip -c {0} {1}"
+        gunzip = "gunzip -c {0} > {1}"
         tmpduo = tempfile.NamedTemporaryFile(delete=False)
         self.duohmm_script = join(self.dirs['script'], 'duohmm.sh')
 
