@@ -242,7 +242,7 @@ class ShapeIt():
 
         duohmm_root = join(self.outdir, self.run_id + '_duohmm')
         self.duohmm_haps = duohmm_root + '.haps'
-        self.duohmm_sample = duohmm_root + '.sample'
+        self.duohmm_sample = duohmm_root + '.samples'
         self.duohmm_geno_e = duohmm_root + '.GE.txt'
         self.duohmm_recomb = duohmm_root + '.RC.txt'
 
