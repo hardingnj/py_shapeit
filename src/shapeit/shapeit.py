@@ -266,7 +266,7 @@ class ShapeIt():
     def _setup_h5_conversion(self):
 
         self.h5_script = join(self.dirs['script'], 'convert_h5.sh')
-        h5_root = "{0} {1}/bin/shapeit_2_hdf5.py {2} {3} --chr {4} --out {5}"
+        h5_root = "{0} {1}/bin/shapeIt2hdf5.py {2} {3} --chr {4} --out {5}"
 
         if self.duohmm_script is not None:
             haps = self.duohmm_haps + '.gz'
