@@ -4,9 +4,10 @@ import re
 from os.path import join, isfile, isdir
 from os import mkdir, getenv
 import sh
-import uuid
+import numpy as np
+import string
 import tempfile
-from utils import parse_command, create_sh_script, md5_for_file
+from shapeit.utils import parse_command, create_sh_script, md5_for_file
 import subprocess
 import yaml
 import sys
@@ -21,13 +22,13 @@ class ShapeIt():
                              stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
         out, _ = p.communicate()
+        out = out.decode()
 
-        p = re.compile("Version : (.+)\n")  # parentheses for capture groups
-        m = p.search(out)
+        m = re.search('Version : (.+)\n', out)
+        # parentheses for capture groups
         if m:
             return m.group(1)
         else:
-            print(out)
             raise Exception('Version not parsed.')
 
     def __init__(self, outdir, executable=getenv('SHAPEIT', 'shapeit'),
@@ -45,7 +46,8 @@ class ShapeIt():
         self.checksum_file = None
         self.contig = None
 
-        self.run_id = self.name + '_' + str(uuid.uuid4().get_hex().upper()[0:8])
+        self.run_id = self.name + '_' + ''.join(np.random.choice(
+            list(string.ascii_uppercase) + list(string.digits), 10))
 
         self.outdir = join(outdir, self.name, self.version, self.run_id)
         self.basedir = outdir
@@ -167,21 +169,21 @@ class ShapeIt():
                   stream=open(self.param_f, 'w'))
 
         for job in self.si_job_list:
-            print sh.qsub('-N', self.run_id, qsub_parameters, si_args, job)
+            print(sh.qsub('-N', self.run_id, qsub_parameters, si_args, job))
 
-        print sh.qsub('-hold_jid', self.run_id, '-N', 'ligate' + self.run_id,
-                      qsub_parameters + li_args, self.ligate_script)
+        print(sh.qsub('-hold_jid', self.run_id, '-N', 'ligate' + self.run_id,
+                      qsub_parameters + li_args, self.ligate_script))
         hold_list.append('ligate' + self.run_id)
 
         if self.duohmm_script is not None:
-            print sh.qsub('-hold_jid', ",".join(hold_list),
+            print(sh.qsub('-hold_jid', ",".join(hold_list),
                           '-N', 'duohmm' + self.run_id,
-                          qsub_parameters + dm_args, self.duohmm_script)
+                          qsub_parameters + dm_args, self.duohmm_script))
             hold_list.append('duohmm' + self.run_id)
 
-        print sh.qsub('-hold_jid', ",".join(hold_list),
+        print(sh.qsub('-hold_jid', ",".join(hold_list),
                       '-N', 'si2hdf5' + self.run_id, '-l', 'h_vmem=4G',
-                      qsub_parameters, self.h5_script)
+                      qsub_parameters, self.h5_script))
 
     def setup_single_job(self, parameters, contig, vcf_file,
                          start=None, stop=None, pirs=None,
@@ -219,19 +221,19 @@ class ShapeIt():
         yaml.dump(self.settings,
                   stream=open(self.param_f, 'w'))
 
-        print sh.qsub('-N', self.run_id, qsub_parameters,
-                      si_args, self.si_script)
+        print(sh.qsub('-N', self.run_id, qsub_parameters,
+                      si_args, self.si_script))
         hold_list.append(self.run_id)
 
         if self.duohmm_script is not None:
-            print sh.qsub('-hold_jid', self.run_id,
+            print(sh.qsub('-hold_jid', self.run_id,
                           '-N', 'duohmm' + self.run_id,
-                          qsub_parameters + dm_args, self.duohmm_script)
+                          qsub_parameters + dm_args, self.duohmm_script))
             hold_list.append('duohmm'+self.run_id)
 
-        print sh.qsub('-hold_jid', ",".join(hold_list),
+        print(sh.qsub('-hold_jid', ",".join(hold_list),
                       '-N', 'si2hdf5' + self.run_id, '-l', 'h_vmem=4G',
-                      qsub_parameters, self.h5_script)
+                      qsub_parameters, self.h5_script))
 
     # INTERNAL FUNCTIONS
     def _setup_duohmm(self):
