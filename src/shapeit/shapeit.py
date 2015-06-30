@@ -44,6 +44,7 @@ class ShapeIt():
         self.version = version
         self.name = 'ShapeIt'
         self.checksum_file = None
+        self.map_file = None
         self.contig = None
 
         self.run_id = self.name + '_' + ''.join(np.random.choice(
@@ -77,8 +78,8 @@ class ShapeIt():
                          'samples': self.phased_f}
 
     def setup_region_jobs(self, parameters, regions=None, contig=None,
-                          vcf_file=None, pirs=None, graphs=False,
-                          duohmm=False, sample_file=None):
+                          vcf_file=None, map_file=None, pirs=None,
+                          graphs=False, duohmm=False, sample_file=None):
 
         """
         Setup the directory structure and scripts for a shapeIt job that
@@ -113,6 +114,9 @@ class ShapeIt():
 
         parameters = [str(x) for x in parameters] + ['--input-vcf', vcf_file]
         self.checksum_file = vcf_file
+        self.map_file = map_file
+        if self.map_file is not None:
+            parameters += ["--input-map", self.map_file]
         self.provided_sample_file = sample_file
         self.contig = contig
 
@@ -185,13 +189,16 @@ class ShapeIt():
                       '-N', 'si2hdf5' + self.run_id, '-l', 'h_vmem=4G',
                       qsub_parameters, self.h5_script))
 
-    def setup_single_job(self, parameters, contig, vcf_file,
+    def setup_single_job(self, parameters, contig, vcf_file, map_file=None,
                          start=None, stop=None, pirs=None,
                          graphs=False, duohmm=False, sample_file=None):
 
         # basically, set up a shapeIT job running the whole file as one.
         parameters = [str(x) for x in parameters] + ['--input-vcf', vcf_file]
         self.checksum_file = vcf_file
+        self.map_file = map_file
+        if self.map_file is not None:
+            parameters += ["--input-map", self.map_file]
         self.provided_sample_file = sample_file
         self.contig = contig
 
@@ -253,6 +260,9 @@ class ShapeIt():
                       '-O', duohmm_root,
                       '-G', self.duohmm_geno_e,
                       '-R', self.duohmm_recomb]
+
+        if self.map_file is not None:
+            cmd_duohmm += ["-M", self.map_file]
 
         command_list = [gunzip.format(self.haplotypes_f, tmpduo.name + '.haps'),
                         "cp {0} {1}".format(self.provided_sample_file,
