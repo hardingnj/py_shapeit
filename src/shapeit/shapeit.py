@@ -61,7 +61,7 @@ class ShapeIt():
         [sh.mkdir(d, '-p') for d in self.dirs.values() if not isdir(d)]
 
         self.haplotypes_f = join(self.outdir, self.run_id + '.haps.gz')
-        self.phased_f = join(self.outdir, self.run_id + '.samples.gz')
+        self.phased_f = join(self.outdir, self.run_id + '.sample.gz')
 
         self.h5out = join(self.outdir, self.run_id + '.h5')
 
@@ -251,7 +251,7 @@ class ShapeIt():
 
         duohmm_root = join(self.outdir, self.run_id + '_duohmm')
         self.duohmm_haps = duohmm_root + '.haps'
-        self.duohmm_sample = duohmm_root + '.samples'
+        self.duohmm_sample = duohmm_root + '.sample'
         self.duohmm_geno_e = duohmm_root + '.GE.txt'
         self.duohmm_recomb = duohmm_root + '.RC.txt'
 
@@ -314,7 +314,7 @@ class ShapeIt():
 
         # this is pretty much the core function
         haps = join(outdir, outstem + '.haps.gz')
-        samples = join(outdir, outstem + '.samples.gz')
+        samples = join(outdir, outstem + '.sample.gz')
 
         cmd_shape_it = [self.executable]
 
