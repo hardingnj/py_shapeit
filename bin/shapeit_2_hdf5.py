@@ -48,7 +48,7 @@ sample_names = np.array([s.rstrip().split(' ') for s in sample_info])[:, 1]
 
 # count lines
 number_sites = sum(1 for line in gzip.open(args.haplotypes))
-print "Haplotypes file contains {0} snps.".format(number_sites)
+print("Haplotypes file contains {0} snps.".format(number_sites))
 
 # create objects
 filters = Filters(complevel=args.comp_level, complib='zlib')
@@ -98,8 +98,8 @@ while True:
         genotypes.append(geno)
 
     except AssertionError:
-        print "Assertion error, shapes don't match:", \
-            sample_names.size, as_np.shape
+        print("Assertion error, shapes don't match:", \
+            sample_names.size, as_np.shape)
         exit(1)
 
 h5file.close()
