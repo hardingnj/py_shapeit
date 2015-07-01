@@ -17,7 +17,7 @@ parser.add_argument('haplotypes', help='haplotypes file')
 parser.add_argument('samples', help='samples file')
 
 parser.add_argument('-c', '--chunksize', dest='chunk_size', action='store',
-                    type=int, default=1e5,
+                    type=int, default=100000,
                     help='Number of lines to read at once from file')
 
 parser.add_argument('-z', '--compression', dest='comp_level', action='store',
@@ -43,8 +43,10 @@ grp_variants = h5file.create_group(chrom, "variants")
 fh_samples = gzip.open(args.samples, 'rb')
 samples_header = fh_samples.readline()
 samples_desc = fh_samples.readline()
-sample_info = fh_samples.readlines()
-sample_names = np.array([s.rstrip().split(' ') for s in sample_info])[:, 1]
+sample_info = [s.decode() for s in fh_samples.readlines()]
+
+sample_names = np.array([s.rstrip().split(' ')
+                         for s in sample_info], dtype="|S8")[:, 1]
 
 # count lines
 number_sites = sum(1 for line in gzip.open(args.haplotypes))
@@ -86,7 +88,7 @@ while True:
     chunk = list(islice(fh_haplotypes, args.chunk_size))
     if not chunk:
         break
-    as_np = np.array([line.rstrip().split(' ') for line in chunk])
+    as_np = np.array([line.decode().rstrip().split(' ') for line in chunk])
     try:
         position.append(as_np[:, 2].astype('int'))
         identify.append(as_np[:, 1])
