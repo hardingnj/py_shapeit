@@ -67,13 +67,13 @@ def calc_regions(size, nbins=20, overlap=0):
     :return: a list of tuples each representing a start and an end.
     """
     if overlap is None:
-        overlap = size/(nbins*20)
-    approx_size = int(1 + size//nbins + overlap - (overlap/nbins))
+        overlap = size//(nbins*20)
+    approx_size = 1 + size//nbins + overlap - (overlap//nbins)
     print(approx_size, overlap)
     regions = []
 
     for i in range(nbins):
-        start = int(i*(approx_size-overlap)) + 1
+        start = i*(approx_size-overlap) + 1
         stop = start + approx_size
         regions.append((start, stop))
     return regions
