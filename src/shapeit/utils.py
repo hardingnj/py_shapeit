@@ -68,7 +68,7 @@ def calc_regions(size, nbins=20, overlap=0):
     """
     if overlap is None:
         overlap = size/(nbins*20)
-    approx_size = 1 + size/nbins + overlap - (overlap/nbins)
+    approx_size = int(1 + size//nbins + overlap - (overlap/nbins))
     print(approx_size, overlap)
     regions = []
 

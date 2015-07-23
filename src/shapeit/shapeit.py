@@ -322,7 +322,7 @@ class ShapeIt():
         if pirfile is not None:
             if graphs:
                 raise ValueError("PIRs not compatible with graphs")
-            assert isfile(pirfile)
+            assert isfile(pirfile), pirfile + " not found"
             cmd_shape_it += ['-assemble', '--input-pir', pirfile]
 
         if (start is not None) or (stop is not None):
