@@ -73,7 +73,7 @@ def calc_regions(size, nbins=20, overlap=0):
     regions = []
 
     for i in range(nbins):
-        start = i*(approx_size-overlap) + 1
+        start = int(i*(approx_size-overlap)) + 1
         stop = start + approx_size
         regions.append((start, stop))
     return regions
