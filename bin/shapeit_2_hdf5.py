@@ -62,25 +62,35 @@ samples = chrom.create_dataset('samples', data=sample_names)
 
 position = grp_variants.create_dataset('POS', (0, ),
                                        maxshape=(number_sites, ),
-                                       dtype="int")
+                                       dtype="int",
+                                       compression="gzip",
+                                       compression_opts=1)
 
 
 identify = grp_variants.create_dataset('ID', (0, ),
                                        maxshape=(number_sites, ),
-                                       dtype="S8")
+                                       dtype="S8",
+                                       compression="gzip",
+                                       compression_opts=1)
 
 
 reference = grp_variants.create_dataset('REF', (0, ),
                                         maxshape=(number_sites, ),
-                                        dtype="S1")
+                                        dtype="S1",
+                                        compression="gzip",
+                                        compression_opts=1)
 
 alternate = grp_variants.create_dataset('ALT', (0, ),
                                         maxshape=(number_sites, ),
-                                        dtype="S1")
+                                        dtype="S1",
+                                        compression="gzip",
+                                        compression_opts=1)
 
 genotypes = grp_calldata.create_dataset('genotype', (0, n_sam, 2),
                                         maxshape=(number_sites, n_sam, 2),
-                                        dtype="int")
+                                        dtype="int",
+                                        compression="gzip",
+                                        compression_opts=1)
 
 fh_haplotypes = gzip.open(args.haplotypes, 'rb')
 
