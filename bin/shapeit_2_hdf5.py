@@ -3,11 +3,11 @@
 __author__ = 'Nicholas Harding'
 
 import argparse
-from tables import Filters, openFile, IntAtom, StringAtom
 import numpy as np
 import gzip
 from itertools import islice
-import os
+import h5py
+import os.path
 
 parser = argparse.ArgumentParser(description='Tool to convert shapeIt output '
                                              'to anhima readable')
@@ -31,13 +31,16 @@ parser.add_argument('-o', '--out', dest='outfile', action='store',
 
 args = parser.parse_args()
 
-h5file = openFile(args.outfile, mode="w")
-root = h5file.root
+if os.path.isfile(args.outfile):
+    raise FileExistsError("outfile already exists")
+else:
+    h5file = h5py.File(args.outfile, mode="w")
+
+chrom = h5file.create_group(args.chr)
 
 # Create the groups
-chrom = h5file.create_group(root, args.chr)
-grp_calldata = h5file.create_group(chrom, "calldata")
-grp_variants = h5file.create_group(chrom, "variants")
+grp_calldata = chrom.create_group("calldata")
+grp_variants = chrom.create_group("variants")
 
 # read samples file
 fh_samples = gzip.open(args.samples, 'rb')
@@ -47,61 +50,62 @@ sample_info = [s.decode() for s in fh_samples.readlines()]
 
 sample_names = np.array([s.rstrip().split(' ')
                          for s in sample_info], dtype="|S8")[:, 1]
+n_sam = len(sample_names)
 
 # count lines
 number_sites = sum(1 for line in gzip.open(args.haplotypes))
 print("Haplotypes file contains {0} snps.".format(number_sites))
 
 # create objects
-filters = Filters(complevel=args.comp_level, complib='zlib')
-samples = h5file.create_array(chrom, 'samples', sample_names)
+#'filters = Filters(complevel=args.comp_level, complib='zlib')
+samples = chrom.create_dataset('samples', data=sample_names)
 
-position = h5file.create_earray(grp_variants, name='POS',
-                                atom=IntAtom(itemsize=4),
-                                expectedrows=number_sites, shape=(0, ),
-                                filters=filters)
+position = grp_variants.create_dataset('POS', (0, ),
+                                       maxshape=(number_sites, ),
+                                       dtype="int")
 
-identify = h5file.create_earray(grp_variants, name='ID',
-                                atom=StringAtom(itemsize=8),
-                                expectedrows=number_sites, shape=(0, ),
-                                filters=filters)
 
-reference = h5file.create_earray(grp_variants, name='REF',
-                                 atom=StringAtom(itemsize=1),
-                                 expectedrows=number_sites, shape=(0, ),
-                                 filters=filters)
+identify = grp_variants.create_dataset('ID', (0, ),
+                                       maxshape=(number_sites, ),
+                                       dtype="S8")
 
-alternate = h5file.create_earray(grp_variants, name='ALT',
-                                 atom=StringAtom(itemsize=1),
-                                 expectedrows=number_sites, shape=(0, ),
-                                 filters=filters)
 
-genotypes = h5file.create_earray(grp_calldata, name='genotype',
-                                 atom=IntAtom(itemsize=1),
-                                 expectedrows=number_sites,
-                                 shape=(0, sample_names.size, 2),
-                                 filters=filters)
+reference = grp_variants.create_dataset('REF', (0, ),
+                                        maxshape=(number_sites, ),
+                                        dtype="S1")
+
+alternate = grp_variants.create_dataset('ALT', (0, ),
+                                        maxshape=(number_sites, ),
+                                        dtype="S1")
+
+genotypes = grp_calldata.create_dataset('genotype', (0, n_sam, 2),
+                                        maxshape=(number_sites, n_sam, 2),
+                                        dtype="int")
 
 fh_haplotypes = gzip.open(args.haplotypes, 'rb')
 
+n = 0
 while True:
     chunk = list(islice(fh_haplotypes, args.chunk_size))
     if not chunk:
         break
-    as_np = np.array([line.decode().rstrip().split(' ') for line in chunk])
-    try:
-        position.append(as_np[:, 2].astype('int'))
-        identify.append(as_np[:, 1])
-        reference.append(as_np[:, 3])
-        alternate.append(as_np[:, 4])
+    as_np = np.array([line.rstrip().split(b' ') for line in chunk])
 
-        geno = as_np[:, 5:].astype('int').reshape((-1, sample_names.size, 2))
-        assert geno.shape[1] == sample_names.size
-        genotypes.append(geno)
+    position.resize(as_np.shape[0] + position.shape[0], axis=0)
+    position[n:] = as_np[:, 2].astype('int')
 
-    except AssertionError:
-        print("Assertion error, shapes don't match:", \
-            sample_names.size, as_np.shape)
-        exit(1)
+    identify.resize(as_np.shape[0] + identify.shape[0], axis=0)
+    identify[n:] = as_np[:, 1]
+
+    alternate.resize(as_np.shape[0] + alternate.shape[0], axis=0)
+    alternate[n:] = as_np[:, 4]
+
+    reference.resize(as_np.shape[0] + reference.shape[0], axis=0)
+    reference[n:] = as_np[:, 3]
+
+    genotypes.resize(as_np.shape[0] + genotypes.shape[0], axis=0)
+    genotypes[n:] = as_np[:, 5:].astype('int').reshape((-1, n_sam, 2))
+
+    n += len(chunk)
 
 h5file.close()
