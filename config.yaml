@@ -1,0 +1,8 @@
+bam_loc_table: bam_locations.txt
+chromosomes: [2R, 2L, 3R, 3L]
+chunkoverlap: 400000
+chunksize: 2000000
+contiglen: {2L: 49364325, 2R: 61545105, 3L: 41963435, 3R: 53200684, UNKN: 42389979,
+  X: 24393108, Y_unplaced: 237045}
+map_path: /path/to/map_{chrom}.map
+vcfstem: /path/to/vcf/locations/vcf_{chrom}.vcf.gz
