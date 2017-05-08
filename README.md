@@ -15,7 +15,7 @@ Clone this repository and rename as an analysis directory.
 
 ```
 DIR=organismX_shapeit_date
-git clone https://github.com/hardingnj/py_shapeit.git $DIR
+git clone https://github.com/hardingnj/snakeit.git $DIR
 ```
 This will create a directory containing the required files.
 
