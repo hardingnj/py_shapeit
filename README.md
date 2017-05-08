@@ -1,10 +1,9 @@
-# py_shapeit
+# snakeit
 
 Snakemake recipe for running/interacting with SHAPEIT via a python environment
 
 This module is immature and should be considered a rough beta. 
 This was developed for research use, I am placing online as I thought it *may* be useful to others. No guarantees!
-
 [SHAPEIT documentation](https://mathgen.stats.ox.ac.uk/genetics_software/shapeit/shapeit.html)
 
 I use the [scikit-allel](http://scikit-allel.readthedocs.io/en/latest/) module for working with genetic variation data, also included is a script that converts SHAPEIT output to an hdf5 file, 
