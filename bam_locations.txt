@@ -1,0 +1,3 @@
+	path
+sample-1	/kwiat/2/mirror/vector/bam/bwa_gatk/s1.bam
+sample-2	/kwiat/2/mirror/vector/bam/bwa_gatk/s2.bam

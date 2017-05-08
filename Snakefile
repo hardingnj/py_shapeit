@@ -6,6 +6,7 @@ import sh
 
 configfile: "config.yaml"
 
+# Determine the chunks into which to break vcf input
 def determine_regions(size, step, overlap):
     
     x = np.arange(1, size, step - overlap)
@@ -38,14 +39,17 @@ rule convert_hdf5:
     output:
         hdf5="shapeit/{chrom}_haplotypes_ag1000g.h5"
     conda:
-        "pir_env.yaml"
+        "env.yaml"
     params:
-        req="h_vmem=4G,h=india.well.ox.ac.uk",
+        req="h_vmem=4G",
         chunk_size=100000,
         max_sites=40000000
     script:
         "../autosomal_phasing/shapeit_2_hdf5.py"
 
+# important note:
+# the ligate haplotypes tool has a bug where it does not read the last line of bgzipped output
+# so, rezip as gzip, then send vcf to tool.
 rule ligate_haplotypes:
     input: 
         phasedchunks=lambda y: determine_shapeit_jobs(
@@ -138,7 +142,7 @@ rule extract_pirs:
     output:
         "PIR/{chrom}/{start}_{stop}_split.pir.gz"
     conda:
-        "pir_env.yaml"
+        "env.yaml"
     params:
         prefix="PIR/{chrom}/{start}_{stop}_split.pir",
         req="h_vmem=2G"
@@ -155,7 +159,7 @@ rule split_vcf:
         vcf=temp("_build/{chrom}/{start}_{stop}_split.vcf.gz"),
         tbi=temp("_build/{chrom}/{start}_{stop}_split.vcf.gz.tbi")
     conda:
-        "pir_env.yaml"
+        "env.yaml"
     params:
         req="h_vmem=2G"
     shell:
