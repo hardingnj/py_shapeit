@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 import os
@@ -6,7 +5,6 @@ import sh
 
 configfile: "config.yaml"
 
-# Determine the chunks into which to break vcf input
 def determine_regions(size, step, overlap):
     
     x = np.arange(1, size, step - overlap)
@@ -32,6 +30,7 @@ rule all:
     input:
         expand("shapeit/{chrom}_haplotypes_ag1000g.h5", chrom=config["chromosomes"])
 
+
 rule convert_hdf5:
     input:
         haplotypes="shapeit/{chrom}_haplotypes_ag1000g.gz",
@@ -39,17 +38,14 @@ rule convert_hdf5:
     output:
         hdf5="shapeit/{chrom}_haplotypes_ag1000g.h5"
     conda:
-        "env.yaml"
+        "pir_env.yaml"
     params:
-        req="h_vmem=4G",
+        req="h_vmem=12G,h=india.well.ox.ac.uk",
         chunk_size=100000,
         max_sites=40000000
     script:
-        "../autosomal_phasing/shapeit_2_hdf5.py"
+        "shapeit_2_hdf5.py"
 
-# important note:
-# the ligate haplotypes tool has a bug where it does not read the last line of bgzipped output
-# so, rezip as gzip, then send vcf to tool.
 rule ligate_haplotypes:
     input: 
         phasedchunks=lambda y: determine_shapeit_jobs(
@@ -58,13 +54,13 @@ rule ligate_haplotypes:
     output:
         haplotypes="shapeit/{chrom}_haplotypes_ag1000g.gz",
         samples="shapeit/{chrom}_samples_ag1000g.gz",
-        vcf=temp("shapeit/ag1000g.{chrom}.all.vcf.gz")
     params:
         req="h_vmem=16G"
+    conda:
+        "pir_env.yaml"
     shell:
-        "gunzip -c {input.vcf} | gzip -c > {output.vcf}; "
         "/home/njh/exec/bin/ligateHAPLOTYPES "
-        "--vcf {output.vcf} "
+        "--vcf {input.vcf} "
         "--chunks {input.phasedchunks} "
         "--output {output.haplotypes} {output.samples}"
         
@@ -72,7 +68,6 @@ rule shape_it:
     input:
         pir="PIR/{chrom}/{start}_{stop}_split.pir.gz",
         vcf="_build/{chrom}/{start}_{stop}_split.vcf.gz",
-        tbi="_build/{chrom}/{start}_{stop}_split.vcf.gz.tbi",
         map=config["map_path"]
     output:
         haplotypes="phased/{chrom}/haplotypes_ag1000g_{start}_{stop}.gz",
@@ -84,7 +79,7 @@ rule shape_it:
         ne=1000000,
         req="h_vmem=8G"
     shell:
-        "shapeit -assemble "
+        "/home/njh/exec/bin/shapeit -assemble "
         "--input-pir {input.pir} "
         "--output-log {output.log} "
         "--thread {params.thread} "
@@ -101,7 +96,7 @@ rule check_samples:
     output:
         "_build/allsamples_{chrom}.txt"
     params:
-        req="h_vmem=2G"
+        req="h_vmem=4G"
     shell:
         "vcfsamplenames {input} > {output}"
         
@@ -135,34 +130,29 @@ rule make_bamlist:
 rule extract_pirs:
     input:
         vcf="_build/{chrom}/{start}_{stop}_split.vcf.gz",
-        tbi="_build/{chrom}/{start}_{stop}_split.vcf.gz.tbi",
         baml="_build/bamlist_{chrom}.txt",
-        tabl="_build/allsamples_{chrom}.txt",
         okbm="_build/bams_{chrom}.ok"
     output:
         "PIR/{chrom}/{start}_{stop}_split.pir.gz"
-    conda:
-        "env.yaml"
     params:
         prefix="PIR/{chrom}/{start}_{stop}_split.pir",
         req="h_vmem=2G"
     shell:
-        "extractPIRs --vcf {input.vcf} "
+        "/home/njh/exec/extractPIRs.v1.r68.x86_64/extractPIRs --vcf {input.vcf} "
         "--bam {input.baml} "
         "--out {params.prefix}; "
         "gzip {params.prefix}"
-        
+
 rule split_vcf:
     input:
         config["vcfstem"]
     output:
-        vcf=temp("_build/{chrom}/{start}_{stop}_split.vcf.gz"),
-        tbi=temp("_build/{chrom}/{start}_{stop}_split.vcf.gz.tbi")
+        vcf="_build/{chrom}/{start}_{stop}_split.vcf.gz",
     conda:
-        "env.yaml"
+        "pir_env.yaml"
     params:
         req="h_vmem=2G"
     shell:
-        "tabix -h {input} {wildcards.chrom}:{wildcards.start}-{wildcards.stop} | "
-        "bgzip -c > {output.vcf}; "
-        "tabix -p vcf {output.vcf}"
+        "vcffilter -f 'QUAL > 0' "
+        "--region {wildcards.chrom}:{wildcards.start}-{wildcards.stop} {input} | "
+        "vcfkeepgeno - GT | vcfkeepinfo - AC | gzip -c > {output.vcf}; "

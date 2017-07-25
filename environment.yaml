@@ -2,7 +2,6 @@
 channels:
   - bioconda
 dependencies:
-  - htslib
   - python=3.5
   - numpy
   - samtools
